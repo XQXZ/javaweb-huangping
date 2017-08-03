@@ -1,0 +1,196 @@
+使用INSERT语句通过JDBC在数据库中添加数据，
+SQL语句中的参数可以用占位符“？”代替，然后通过PreparedStatement为其复制并执行SQL语句。
+自己在eclispe中创建一个WEB项目，通过JDBC实现添加图书馆信息功能。
+
+
+1）在MySQL数据库新建数据库book中创建图书信息表tb_books
+
+CREATE TABLE `tb_book` (  
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'ID编号',  
+  `name` varchar(45) NOT NULL COMMENT '图书名称',  
+  `price` double NOT NULL COMMENT '价格',  
+  `bookCount` int(10) unsigned NOT NULL COMMENT '数量',  
+  `author` varchar(45) NOT NULL COMMENT '作者',  
+  PRIMARY KEY (`id`)  
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=gbk;  
+
+2）在工程中创建名为“Book”的类，用于封装图书对象信息
+
+
+
+package com.lyq.bean;  
+/**  
+ * 图书实体类  
+ * @author Li YongQiang  
+ */  
+public class Book {  
+    // 编号  
+    private int id;  
+    // 图书名称  
+    private String name;  
+    // 价格  
+    private double price;  
+    // 数量  
+    private int bookCount;  
+    // 作者  
+    private String author;  
+    public int getId() {  
+        return id;  
+    }  
+    public void setId(int id) {  
+        this.id = id;  
+    }  
+    public String getName() {  
+        return name;  
+    }  
+    public void setName(String name) {  
+        this.name = name;  
+    }  
+    public double getPrice() {  
+        return price;  
+    }  
+    public void setPrice(double price) {  
+        this.price = price;  
+    }  
+    public int getBookCount() {  
+        return bookCount;  
+    }  
+    public void setBookCount(int bookCount) {  
+        this.bookCount = bookCount;  
+    }  
+    public String getAuthor() {  
+        return author;  
+    }  
+    public void setAuthor(String author) {  
+        this.author = author;  
+    }  
+}  
+
+3）创建index.jsp页面作为主程序主页，用于放置图书馆信息所需的表单，此表单提交到AddBook.jsp页面处理：
+
+<pre name="code" class="html"><%@ page language="java" contentType="text/html; charset=GB18030"  
+    pageEncoding="GB18030"%>  
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">  
+<html>  
+<head>  
+<meta http-equiv="Content-Type" content="text/html; charset=GB18030">  
+<title>添加图书信息</title>  
+<script type="text/javascript">  
+    function check(form){  
+        with(form){  
+            if(name.value == ""){  
+                alert("图书名称不能为空");  
+                return false;  
+            }  
+            if(price.value == ""){  
+                alert("价格不能为空");  
+                return false;  
+            }  
+            if(author.value == ""){  
+                alert("作者不能为空");  
+                return false;  
+            }  
+            return true;  
+        }  
+    }  
+</script>  
+</head>  
+<body>  
+    <form action="AddBook.jsp" method="post" onsubmit="return check(this);">  
+        <table align="center" width="450">  
+            <tr>  
+                <td align="center" colspan="2">  
+                    <h2>添加图书信息</h2>  
+                    <hr>  
+                </td>  
+            </tr>  
+            <tr>  
+                <td align="right">图书名称：</td>  
+                <td><input type="text" name="name" /></td>  
+            </tr>  
+            <tr>  
+                <td align="right">价　　格：</td>  
+                <td><input type="text" name="price" /></td>  
+            </tr>  
+            <tr>  
+                <td align="right">数　　量：</td>  
+                <td><input type="text" name="bookCount" /></td>  
+            </tr>  
+            <tr>  
+                <td align="right">作　　者：</td>  
+                <td><input type="text" name="author" /></td>  
+            </tr>  
+            <tr>  
+                <td align="center" colspan="2">  
+                    <input type="submit" value="添　加">  
+                </td>  
+            </tr>  
+        </table>  
+    </form>  
+</body>  
+</html>  
+
+
+4）创建AddBook.jsp页面，用于处理添加图书信息的请求。
+
+<%@ page language="java" contentType="text/html; charset=GB18030"  
+    pageEncoding="GB18030"%>  
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">  
+  
+<%@page import="java.sql.Connection"%>  
+<%@page import="java.sql.DriverManager"%>  
+<%@page import="java.sql.PreparedStatement"%>  
+<html>  
+<head>  
+<meta http-equiv="Content-Type" content="text/html; charset=GB18030">  
+<title>添加结果</title>  
+</head>  
+<body>  
+    <%request.setCharacterEncoding("GB18030"); %>  
+    <jsp:useBean id="book" class="com.lyq.bean.Book"></jsp:useBean>  
+    <jsp:setProperty property="*" name="book"/>  
+    <%  
+        try {  
+            // 加载数据库驱动，注册到驱动管理器  
+            Class.forName("com.mysql.jdbc.Driver");  
+            // 数据库连接字符串  
+            String url = "jdbc:mysql://localhost:3306/book";  
+            // 数据库用户名  
+            String username = "root";  
+            // 数据库密码  
+            String password = "111";  
+            // 创建Connection连接  
+            Connection conn = DriverManager.getConnection(url,username,password);  
+            // 添加图书信息的SQL语句  
+            String sql = "insert into tb_book(name,price,bookCount,author) values(?,?,?,?)";  
+            // 获取PreparedStatement  
+            PreparedStatement ps = conn.prepareStatement(sql);  
+            // 对SQL语句中的第1个参数赋值  
+            ps.setString(1, book.getName());  
+            // 对SQL语句中的第2个参数赋值  
+            ps.setDouble(2, book.getPrice());  
+            // 对SQL语句中的第3个参数赋值  
+            ps.setInt(3,book.getBookCount());  
+            // 对SQL语句中的第4个参数赋值  
+            ps.setString(4, book.getAuthor());  
+            // 执行更新操作，返回所影响的行数  
+            int row = ps.executeUpdate();  
+            // 判断是否更新成功  
+            if(row > 0){  
+                // 更新成输出信息  
+                out.print("成功添加了 " + row + "条数据！");  
+            }  
+            // 关闭PreparedStatement，释放资源  
+            ps.close();  
+            // 关闭Connection，释放资源  
+            conn.close();  
+        } catch (Exception e) {  
+            out.print("图书信息添加失败！");  
+            e.printStackTrace();  
+        }  
+    %>  
+    <br>  
+    <a href="index.jsp">返回</a>  
+</body>  
+</html>  
+
