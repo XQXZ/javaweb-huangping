@@ -1,0 +1,224 @@
+index.jsp
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<style>
+	#divHead
+	{
+		background:url(images/book.jpg);
+		width:60%;
+		height:480px;
+		margin-left:25%;
+		text-align:center;
+	}
+	
+</style>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<div id="divHead">
+	<div id="content">
+		<form action="addBook.jsp" method="post" name="form1">
+			图书名称:<input type="text" name="name"/><br>
+			价格:<input type="text" name="price"/><br>
+			数量:<input type="text" name="bookCount"/><br>
+			作者:<input type="text" name="author"/><br>
+			<button>添加</button>
+		</form>
+		<br>
+		<a href="query.jsp">查询</a><br><br>
+		<form action="change.jsp" method="post" name="form2">
+			图书编号:<input type="text" name="changeBookid"/><br>
+			图书名称:<input type="text" name="changeBookname"/><br>
+			价格:<input type="text" name="changeBookprice"/><br>
+			数量:<input type="text" name="changeBookcount"/><br>
+			作者:<input type="text" name="changeBookauthor"/><br>
+			<button>修改</button> 
+		</form>
+		<br><br>
+		<form action="delete.jsp" method="post" name="form3">
+			删除图书的编号:<input type="text" name="deleteBookid"/><br>
+			<button>删除</button>
+		</form>
+	</div>
+</div>
+</body>
+</html>
+
+addBook.jsp
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ page import ="java.sql.*" %>
+<% request.setCharacterEncoding("UTF-8"); %>
+<jsp:useBean id="book" class="com.po.BookBean"></jsp:useBean>
+<jsp:setProperty property="*" name="book"/>
+<%
+		
+		try{
+			Connection conn=null;
+			Class.forName("com.mysql.jdbc.Driver");
+			conn=DriverManager.getConnection("jdbc:mysql://localhost:3306/Geek99DB","root","123456");
+			String sql="insert into tb_book(name,price,bookCount,author) values(?,?,?,?)";
+			PreparedStatement ps =conn.prepareStatement(sql);
+			ps.setString(1, book.getName());
+			ps.setDouble(2, book.getPrice());
+			ps.setInt(3, book.getBookCount());
+			ps.setString(4,book.getAuthor());
+			ps.executeUpdate();
+			out.print("添加成功");
+			ps.close();
+			conn.close();
+		}
+		catch(Exception e)
+	
+		{
+			out.print("添加失败");
+			e.printStackTrace();
+		}
+	%>
+
+	
+	<br><a href="index.jsp">返回</a>
+
+
+change.jsp
+<%@page import="org.omg.CORBA.DoubleSeqHolder"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+
+<%@ page import ="java.sql.*" %>
+<%@ page import="com.po.DBUtil" %>
+<% request.setCharacterEncoding("UTF-8"); %>
+
+<!-- 修改相关图书的数据 -->
+<%
+try{
+	
+	int changeBookid=Integer.valueOf(request.getParameter("changeBookid"));
+	
+	String changeBookname=request.getParameter("changeBookname");
+	double changeBookprice=Double.valueOf(request.getParameter("changeBookprice"));
+	int changeBookcount = Integer.valueOf(request.getParameter("changeBookcount"));
+	String changeBookauthor=request.getParameter("changeBookauthor");
+	Connection conn=DBUtil.open();
+	String sql="update tb_book  set name=?,price=?,bookcount=?,author=? where id =?";
+	
+	PreparedStatement ps= conn.prepareStatement(sql);
+	
+	ps.setString(1, changeBookname);
+	
+	ps.setDouble(2, changeBookprice);
+	
+	ps.setInt(3, changeBookcount);
+	
+	ps.setString(4, changeBookauthor);
+	
+	ps.setInt(5, changeBookid);
+	
+	ps.executeUpdate();
+	
+	ps.close();
+	DBUtil.close(conn);
+	out.println("修改成功");
+}catch(Exception e)
+	{
+		out.println("修改失败");
+		e.printStackTrace();
+	}
+%>
+<a href="index.jsp">首页</a>
+
+delete.jsp
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ page import ="java.sql.*" %>
+<%@ page import="com.po.DBUtil" %>
+<% request.setCharacterEncoding("UTF-8"); %>
+<%
+	try
+		{
+			int deleteBookid=Integer.valueOf(request.getParameter("deleteBookid"));
+			Connection conn = DBUtil.open();
+			String sql="delete from tb_book where id =?;";
+			PreparedStatement ps= conn.prepareStatement(sql);
+			ps.setInt(1, deleteBookid);
+			ps.executeUpdate();
+			
+			ps.close();
+			DBUtil.close(conn);
+			out.println("删除成功");
+		}
+		catch(Exception e)
+		{
+			out.println("删除失败");
+			e.printStackTrace();
+		}
+%>
+
+query.jsp
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+
+<%@ page import ="java.sql.*" %>
+<%@ page import="com.po.DBUtil" %>
+<% request.setCharacterEncoding("UTF-8"); %>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+	<h1>图书概况预览表</h1>
+	<table width="98%" border="0" align="center" cellpadding="0">
+	<tr>
+		<th>ID</th>
+		<th>图书名称</th>
+		<th>价格</th>
+		<th>数量</th>
+		<th>作者</th>
+	</tr>
+		<% 
+		Connection conn=DBUtil.open();
+		String sql="select * from tb_book;";
+		try {
+			Statement stmt=conn.createStatement();
+			ResultSet rs=stmt.executeQuery(sql);
+			while(rs.next())
+			{
+				int id=rs.getInt(1);
+				String name=rs.getString(2);
+				double price=rs.getDouble(3);
+				int bookCount=rs.getInt(4);
+				String author=rs.getString(5);
+		%>
+		<tr align="center">
+			<td><%=id %></td>
+			<td><%=name %></td>
+			<td><%=price %></td>
+			<td><%=bookCount %></td>
+			<td><%=author %></td>
+		</tr>
+		
+		<%	}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		finally {
+			if(conn!=null)
+			{
+				DBUtil.close(conn);
+			}
+		}
+%>
+</table>
+</body>
+</html>
